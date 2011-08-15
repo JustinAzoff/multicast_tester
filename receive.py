@@ -27,7 +27,7 @@ def recv(seconds=4):
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
     print "waiting for first packet..."
-    data, address = sock.recvfrom(8192)
+    data, address = sock.recvfrom(1024*64)
     print "got it. Testing for %d seconds" % seconds
 
     start = c = s = time.time()
