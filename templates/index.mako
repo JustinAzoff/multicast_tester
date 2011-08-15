@@ -1,14 +1,16 @@
 <table border=1>
 <thead>
-<tr> <th> Time </th> <th> IP </th> <th> kbytes </th> <th> mbits </th> </tr>
+<tr> <th> IP </th> <th> Last </th> <th>Samples</th> <th> min </th> <th> max </th> <th> avg </th> </tr>
 </thead>
 <tbody>
 %for x in stats:
 <tr>
-    <td>${x.time.strftime("%Y-%m-%d %H:%M:%S")}</td>
     <td>${x.ip}</td>
-    <td>${x.kbytes}</td>
-    <td>${x.mbits}</td>
+    <td>${x.last}</td>
+    <td>${x.samples}</td>
+    <td>${x.min}</td>
+    <td>${x.max}</td>
+    <td>${x.avg}</td>
 </tr>
 %endfor
 </tbody>

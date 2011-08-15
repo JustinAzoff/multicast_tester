@@ -4,7 +4,6 @@ from bottle import Bottle, run, request, response, redirect, request, abort, jso
 from bottle import mako_view as view
 import bottle
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
-print 'template_dir', template_dir
 bottle.TEMPLATE_PATH.insert(0, template_dir)
 
 #bottle.debug(True)
@@ -45,7 +44,7 @@ def log_stats(ip, time, kbytes, mbits):
 
 def get_stats():
     conn = engine.connect()
-    return conn.execute(stats.select().order_by(stats.c.time.desc()))
+    return conn.execute("SELECT ip, max(time) as last, count(1) as samples, min(mbits) as min, max(mbits) as max, avg(mbits) as avg from stats group by ip")
 
 @app.post("/send")
 def send():
