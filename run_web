@@ -1,2 +1,2 @@
 #!/bin/sh
-gunicorn stats_server:app -b 0.0.0.0:7001 --max-requests=100 -t 30
+gunicorn stats_server:app -b 0.0.0.0:7001 --max-requests=100 -t 30 -w 4
