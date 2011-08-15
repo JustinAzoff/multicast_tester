@@ -46,6 +46,10 @@ def get_stats():
     conn = engine.connect()
     return conn.execute("SELECT ip, max(time) as last, count(1) as samples, min(mbits) as min, max(mbits) as max, avg(mbits) as avg from stats group by ip")
 
+def get_stats_for_ip(ip):
+    conn = engine.connect()
+    return conn.execute(stats.select(stats.c.ip==ip).order_by(stats.c.time.desc()))
+
 @app.post("/send")
 def send():
     ip = request.environ['REMOTE_ADDR']
@@ -60,6 +64,11 @@ def send():
 @view("index.mako")
 def index():
     return dict(stats=get_stats())
+
+@app.route("/ip/:ip")
+@view("ip.mako")
+def ip_info(ip):
+    return dict(stats=get_stats_for_ip(ip), title=ip)
 
 def main():
     run(app, host='0.0.0.0',server='auto', port=7001)

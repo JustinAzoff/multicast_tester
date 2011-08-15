@@ -1,16 +1,12 @@
-<html>
-<head>
-<title> Multicast Stats</title>
-</head>
-<body>
-<table border=1>
+<%inherit file="base.mako"/>
+<table class="data" border=1>
 <thead>
 <tr> <th> IP </th> <th> Last </th> <th>Samples</th> <th> min </th> <th> max </th> <th> avg </th> </tr>
 </thead>
 <tbody>
 %for x in stats:
 <tr>
-    <td>${x.ip}</td>
+    <td><a href="/ip/${x.ip}">${x.ip}</a></td>
     <td>${x.last}</td>
     <td>${x.samples}</td>
     <td>${x.min}</td>
@@ -20,4 +16,3 @@
 %endfor
 </tbody>
 </table>
-</body>
