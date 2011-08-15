@@ -1,3 +1,8 @@
+<html>
+<head>
+<title> Multicast Stats</title>
+</head>
+<body>
 <table border=1>
 <thead>
 <tr> <th> IP </th> <th> Last </th> <th>Samples</th> <th> min </th> <th> max </th> <th> avg </th> </tr>
@@ -15,3 +20,4 @@
 %endfor
 </tbody>
 </table>
+</body>
