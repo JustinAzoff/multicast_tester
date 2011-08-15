@@ -5,7 +5,7 @@
 <tbody>
 %for x in stats:
 <tr>
-    <td>${x.time}</td>
+    <td>${x.time.strftime("%Y-%m-%d %H:%M:%S")}</td>
     <td>${x.ip}</td>
     <td>${x.kbytes}</td>
     <td>${x.mbits}</td>

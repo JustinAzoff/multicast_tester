@@ -18,6 +18,7 @@ log = logging.getLogger("stats-server")
 from sqlalchemy import create_engine
 from sqlalchemy import Table, Column, DateTime, Float, Integer, String, MetaData, ForeignKey
 from sqlalchemy.sql import func
+import datetime
 
 engine = create_engine('sqlite:///stats.db', echo=False)
 
@@ -35,11 +36,11 @@ except:
     pass
 #########
 
-def log_stats(ip, kbytes, mbits):
+def log_stats(ip, time, kbytes, mbits):
     log.info("%s got %d kbytes - %0.2f mbits" % (ip, kbytes, mbits))
     conn = engine.connect()
     conn.execute(
-        stats.insert().values(time=func.now(), ip=ip, kbytes=kbytes, mbits=mbits)
+        stats.insert().values(time=time, ip=ip, kbytes=kbytes, mbits=mbits)
     )
 
 def get_stats():
@@ -50,8 +51,10 @@ def get_stats():
 def send():
     ip = request.environ['REMOTE_ADDR']
     mbits = float(request.POST.get("mbits"))
+    time = float(request.POST.get("time"))
+    time = datetime.datetime.fromtimestamp(time)
     kbytes = int(request.POST.get("kbytes"))
-    log_stats(ip, kbytes, mbits)
+    log_stats(ip, time, kbytes, mbits)
     return "ok"
 
 @app.route("/")
