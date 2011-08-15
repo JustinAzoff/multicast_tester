@@ -16,6 +16,7 @@ PORT=7000
 server_address = ('', PORT)
 
 STATS_INTERVAL = 1
+HELLO_URL = "http://mcastserver:7001/hello"
 STATS_URL = "http://mcastserver:7001/send"
 
 def recv(seconds=4):
@@ -45,6 +46,9 @@ def recv(seconds=4):
             total=0
             s=c
 
+def send_hello():
+    return urllib2.urlopen(HELLO_URL, timeout=10).read()
+
 def send_stats(item):
     print "%s %d Kbytes in %0.2f seconds %0.2f megabit" % (item[0], item[1], STATS_INTERVAL, item[2])
     data = urllib.urlencode({'time': item[0], 'kbytes': item[1], 'mbits': item[2]})
@@ -61,6 +65,7 @@ def stats_thread(Q):
         send_stats(item)
 
 def run_test(seconds):
+    print "Server says:", send_hello()
     stats_queue = Queue.Queue()
     t = threading.Thread(target=stats_thread, name="stats", args=(stats_queue,))
     t.start()
