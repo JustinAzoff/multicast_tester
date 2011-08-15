@@ -72,7 +72,7 @@ def run_test(seconds):
 
 if __name__ == "__main__":
     import sys
-    seconds = 30
+    seconds = 60
     try :
         seconds = int(sys.argv[1])
     except:
