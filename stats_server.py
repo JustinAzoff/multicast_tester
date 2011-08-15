@@ -50,6 +50,12 @@ def get_stats_for_ip(ip):
     conn = engine.connect()
     return conn.execute(stats.select(stats.c.ip==ip).order_by(stats.c.time.desc()))
 
+import manage_iperf
+@app.route("/hello")
+def hello():
+    manage_iperf.require_iperf()
+    return "hello"
+
 @app.post("/send")
 def send():
     ip = request.environ['REMOTE_ADDR']
