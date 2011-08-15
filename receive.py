@@ -64,11 +64,12 @@ def run_test(seconds):
     stats_queue = Queue.Queue()
     t = threading.Thread(target=stats_thread, name="stats", args=(stats_queue,))
     t.start()
-    for stat in recv(seconds):
-        stats_queue.put(stat)
-
-    stats_queue.put(None)
-    t.join()
+    try :
+        for stat in recv(seconds):
+            stats_queue.put(stat)
+    finally:
+        stats_queue.put(None)
+        t.join()
 
 if __name__ == "__main__":
     import sys
