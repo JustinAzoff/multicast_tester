@@ -29,19 +29,21 @@ def recv(seconds=4):
     print "got it. Testing for %d seconds" % seconds
 
     start = c = s = time.time()
-    total = 0
+    packets = total = 0
     idx = 1
     while c - start < seconds:
         data, address = sock.recvfrom(1024*64)
+        packets += 1
         total += len(data)
         c = time.time()
         if c- s >= STATS_INTERVAL:
             kbytes = total/1024
             mbit = kbytes*8/1024.0/STATS_INTERVAL
+            packets_sec = packets / STATS_INTERVAL
 
-            yield dict(time=c, kbytes=kbytes, mbits=mbit, interval=STATS_INTERVAL, idx=idx)
+            yield dict(time=c, kbytes=kbytes, mbits=mbit, pps=packets_sec, interval=STATS_INTERVAL, idx=idx)
 
-            total=0
+            total = packets = 0
             s=c
             idx += 1
 
@@ -66,7 +68,7 @@ def run_test(seconds):
     try :
         for stat in recv(seconds):
             items.append(stat)
-            print "%(idx)3d %(time)s %(kbytes)d Kbytes in %(interval)0.2f seconds %(mbits)0.2f megabit" % (stat)
+            print "%(idx)3d %(time)s %(kbytes)d Kbytes %(interval)0.2f seconds %(mbits)0.2f megabit %(pps)0.2f pps" % (stat)
     finally:
         send_stats(items)
 
