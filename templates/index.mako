@@ -1,7 +1,7 @@
 <%inherit file="base.mako"/>
 <table class="data" border=1>
 <thead>
-<tr> <th> IP </th> <th> Last </th> <th>Samples</th> <th> min </th> <th> max </th> <th> avg </th> <th> pps </th> </tr>
+<tr> <th> IP </th> <th> Last </th> <th>Samples</th> <th> min </th> <th> max </th> <th> avg </th> <th> pps </th> <th> dups </th> </tr> 
 </thead>
 <tbody>
 %for x in stats:
@@ -13,6 +13,7 @@
     <td>${x.max}</td>
     <td>${x.avg}</td>
     <td>${x.pps}</td>
+    <td>${x.dups}</td>
 </tr>
 %endfor
 </tbody>
