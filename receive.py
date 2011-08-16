@@ -7,6 +7,9 @@ import time
 import json
 import urllib2
 
+import struct
+
+
 message = 'very important data'
 multicast_group = '239.255.52.100'
 PORT=7000
@@ -15,6 +18,15 @@ server_address = ('', PORT)
 STATS_INTERVAL = 1
 HELLO_URL = "http://mcastserver:7001/hello"
 STATS_URL = "http://mcastserver:7001/send_stats"
+
+def parse(packet):
+    id = ord(packet[3])
+    ts = packet[4:8]
+    us = packet[8:12]
+    ts = struct.unpack(">L", ts)[0]
+    us = struct.unpack(">L", us)[0]
+    return ts, us, id
+    
 
 def recv(seconds=4):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -31,15 +43,16 @@ def recv(seconds=4):
     start = c = s = time.time()
     dups = packets = total = 0
     idx = 1
-    last = None
+    last = (0,0,0)
     while c - start < seconds:
         data, address = sock.recvfrom(1024*64)
-        if data == last:
+        info = parse(data)
+        if not info > last:
             dups += 1
         else :
             packets += 1
             total += len(data)
-        last = data
+        last = info
         c = time.time()
         if c- s >= STATS_INTERVAL:
             kbytes = total/1024
