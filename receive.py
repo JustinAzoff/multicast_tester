@@ -32,7 +32,7 @@ def recv(seconds=4):
     total = 0
     idx = 1
     while c - start < seconds:
-        data, address = sock.recvfrom(8192)
+        data, address = sock.recvfrom(1024*64)
         total += len(data)
         c = time.time()
         if c- s >= STATS_INTERVAL:
@@ -49,10 +49,12 @@ def send_hello():
     return urllib2.urlopen(HELLO_URL, timeout=10).read()
 
 def send_stats(items):
+    print "Uploading results to server..."
     data = json.dumps(items)
     for x in range(5):
         try :
             urllib2.urlopen(STATS_URL, data, timeout=10).read()
+            print "Sent!"
             return True
         except Exception, e:
             print e
@@ -64,7 +66,7 @@ def run_test(seconds):
     try :
         for stat in recv(seconds):
             items.append(stat)
-            print "%(time)s %(kbytes)d Kbytes in %(interval)0.2f seconds %(mbits)0.2f megabit" % (stat)
+            print "%(idx)3d %(time)s %(kbytes)d Kbytes in %(interval)0.2f seconds %(mbits)0.2f megabit" % (stat)
     finally:
         send_stats(items)
 
