@@ -52,7 +52,7 @@ def log_stats(ip, time, kbytes, mbits, dups=None, pps=None, idx=None):
 
 def get_stats():
     conn = engine.connect()
-    return conn.execute("SELECT ip, max(time) as last, count(1) as samples, min(mbits) as min, max(mbits) as max, avg(mbits) as avg from stats group by ip order by max DESC")
+    return conn.execute("SELECT ip, max(time) as last, count(1) as samples, min(mbits) as min, max(mbits) as max, avg(mbits) as avg, avg(pps) as pps from stats group by ip order by max DESC")
 
 def get_stats_for_ip(ip):
     conn = engine.connect()
