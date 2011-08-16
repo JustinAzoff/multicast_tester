@@ -4,13 +4,21 @@ import signal
 import time
 import subprocess
 
-IPERF="iperf -c 239.255.52.100 -t 14400 -u -T 3  -i 60 -b 100m -p 7000"
+IPERF="iperf -c 239.255.52.100 -t 14400 -u -T 3  -i 60 -b 100m -p 7000".split()
 
 IPERF_RUNTIME = 60*10
 
+def wait():
+    try :
+        os.wait()
+    except:
+        pass
+
 def kill(pid):
-    print "Killing iperf"
-    os.kill(pid, signal.SIGKILL)
+    print "Killing iperf pid", pid
+    os.kill(pid, signal.SIGTERM)
+    p, status = os.waitpid(pid,os.P_NOWAIT)
+    wait()
 
 def require_iperf():
     f = open("need_iperf.dat.new",'w')
@@ -20,7 +28,8 @@ def require_iperf():
 
 def start_iperf():
     print 'starting iperf'
-    p=subprocess.Popen(IPERF,shell=True)
+    p=subprocess.Popen(IPERF,shell=False)
+    print "iperf pid", p.pid
     return p.pid
 
 def get_stored_time():
