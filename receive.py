@@ -52,7 +52,7 @@ def recv(seconds=4):
         else :
             packets += 1
             total += len(data)
-        last = info
+            last = info
         c = time.time()
         if c- s >= STATS_INTERVAL:
             kbytes = total/1024
