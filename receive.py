@@ -4,10 +4,7 @@ import struct
 import sys
 import time
 
-import threading
-import Queue
-
-import urllib
+import json
 import urllib2
 
 message = 'very important data'
@@ -17,7 +14,7 @@ server_address = ('', PORT)
 
 STATS_INTERVAL = 1
 HELLO_URL = "http://mcastserver:7001/hello"
-STATS_URL = "http://mcastserver:7001/send"
+STATS_URL = "http://mcastserver:7001/send_stats"
 
 def recv(seconds=4):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -33,6 +30,7 @@ def recv(seconds=4):
 
     start = c = s = time.time()
     total = 0
+    idx = 1
     while c - start < seconds:
         data, address = sock.recvfrom(8192)
         total += len(data)
@@ -41,40 +39,34 @@ def recv(seconds=4):
             kbytes = total/1024
             mbit = kbytes*8/1024.0/STATS_INTERVAL
 
-            yield c, kbytes, mbit
+            yield dict(time=c, kbytes=kbytes, mbits=mbit, interval=STATS_INTERVAL, idx=idx)
 
             total=0
             s=c
+            idx += 1
 
 def send_hello():
     return urllib2.urlopen(HELLO_URL, timeout=10).read()
 
-def send_stats(item):
-    print "%s %d Kbytes in %0.2f seconds %0.2f megabit" % (item[0], item[1], STATS_INTERVAL, item[2])
-    data = urllib.urlencode({'time': item[0], 'kbytes': item[1], 'mbits': item[2]})
-    try :
-        urllib2.urlopen(STATS_URL, data, timeout=10).read()
-    except Exception, e:
-        print e
-
-def stats_thread(Q):
-    while True:
-        item = Q.get()
-        if item is None:
-            return
-        send_stats(item)
+def send_stats(items):
+    data = json.dumps(items)
+    for x in range(5):
+        try :
+            urllib2.urlopen(STATS_URL, data, timeout=10).read()
+            return True
+        except Exception, e:
+            print e
+            time.sleep(2)
 
 def run_test(seconds):
     print "Server says:", send_hello()
-    stats_queue = Queue.Queue()
-    t = threading.Thread(target=stats_thread, name="stats", args=(stats_queue,))
-    t.start()
+    items = []
     try :
         for stat in recv(seconds):
-            stats_queue.put(stat)
+            items.append(stat)
+            print "%(time)s %(kbytes)d Kbytes in %(interval)0.2f seconds %(mbits)0.2f megabit" % (stat)
     finally:
-        stats_queue.put(None)
-        t.join()
+        send_stats(items)
 
 if __name__ == "__main__":
     import sys

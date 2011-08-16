@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+try:
+    import json
+except:
+    import simplejson as json
+
 import os
 from bottle import Bottle, run, request, response, redirect, request, abort, json_dumps
 from bottle import mako_view as view
@@ -24,6 +29,7 @@ engine = create_engine('sqlite:///stats.db', echo=False)
 metadata = MetaData()
 stats = Table('stats', metadata,
     Column('id', Integer, primary_key=True),
+    Column('idx', Integer),
     Column('time', DateTime),
     Column('ip', String(25)),
     Column('kbytes', Integer),
@@ -35,11 +41,11 @@ except:
     pass
 #########
 
-def log_stats(ip, time, kbytes, mbits):
+def log_stats(ip, time, kbytes, mbits, idx=None):
     log.info("%s got %d kbytes - %0.2f mbits" % (ip, kbytes, mbits))
     conn = engine.connect()
     conn.execute(
-        stats.insert().values(time=time, ip=ip, kbytes=kbytes, mbits=mbits)
+        stats.insert().values(time=time, ip=ip, kbytes=kbytes, mbits=mbits, idx=idx)
     )
 
 def get_stats():
@@ -64,6 +70,19 @@ def send():
     time = datetime.datetime.fromtimestamp(time)
     kbytes = int(request.POST.get("kbytes"))
     log_stats(ip, time, kbytes, mbits)
+    return "ok"
+
+@app.post("/send_stats")
+def send_stats():
+    ip = request.environ['REMOTE_ADDR']
+    data = request.body.read()
+    items = json.loads(data)
+    for item in items:
+        time = datetime.datetime.fromtimestamp(item['time'])
+        kbytes = item['kbytes']
+        mbits = item['mbits']
+        idx = item['idx']
+        log_stats(ip, time, kbytes, mbits, idx)
     return "ok"
 
 @app.route("/")
