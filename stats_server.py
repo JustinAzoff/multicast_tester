@@ -60,6 +60,8 @@ def get_stats_for_ip(ip):
 import manage_iperf
 @app.route("/hello")
 def hello():
+    ip = request.environ['REMOTE_ADDR']
+    log.info("Starting test for ip=%s" % ip)
     manage_iperf.require_iperf()
     return "hello"
 
