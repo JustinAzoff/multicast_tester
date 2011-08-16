@@ -35,6 +35,7 @@ stats = Table('stats', metadata,
     Column('kbytes', Integer),
     Column('mbits', Float),
     Column('pps', Float),
+    Column('dups', Integer),
 )
 try:
     metadata.create_all(engine) 
@@ -42,11 +43,11 @@ except:
     pass
 #########
 
-def log_stats(ip, time, kbytes, mbits, pps=None, idx=None):
-    log.info("%d %s got %d kbytes - %0.2f mbits %s pps" % (idx, ip, kbytes, mbits, pps))
+def log_stats(ip, time, kbytes, mbits, dups=None, pps=None, idx=None):
+    log.info("%d %s got %d kbytes - %0.2f mbits %s pps %s dups" % (idx, ip, kbytes, mbits, pps, dups))
     conn = engine.connect()
     conn.execute(
-        stats.insert().values(time=time, ip=ip, kbytes=kbytes, mbits=mbits, pps=pps, idx=idx)
+        stats.insert().values(time=time, ip=ip, kbytes=kbytes, mbits=mbits, pps=pps, idx=idx, dups=dups)
     )
 
 def get_stats():
@@ -85,8 +86,9 @@ def send_stats():
         kbytes = item['kbytes']
         mbits = item['mbits']
         pps = item.get('pps', None)
+        dups = item.get('dups', None)
         idx = item['idx']
-        log_stats(ip, time, kbytes, mbits, pps, idx)
+        log_stats(ip, time, kbytes, mbits, dups, pps, idx)
     return "ok"
 
 @app.route("/")
