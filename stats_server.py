@@ -42,6 +42,7 @@ stats = Table('stats', metadata,
     Column('pps', Float),
     Column('dups', Integer),
     Column('delay', Float),
+    Column('loss', Float),
 )
 test_runs = Table('test_runs', metadata,
     Column('id', Integer, primary_key=True),
@@ -52,6 +53,7 @@ test_runs = Table('test_runs', metadata,
     Column('pps', Float),
     Column('dups', Integer),
     Column('delay', Float),
+    Column('loss', Float),
 )
 try:
     metadata.create_all(engine) 
@@ -79,9 +81,9 @@ def avg(items):
     return sum(items) / len(items)
 #########
 
-def log_stats(ip, time, kbytes, mbits, delay=None, dups=None, pps=None, idx=None):
-    log.info("%d %s got %d kbytes - %0.2f mbits %s pps %s dups %0.3f delay" % (idx, ip, kbytes, mbits, pps, dups, delay))
-    s = Stat(time=time, ip=ip, kbytes=kbytes, mbits=mbits, pps=pps, idx=idx, dups=dups, delay=delay)
+def log_stats(ip, time, kbytes, mbits, loss=None, delay=None, dups=None, pps=None, idx=None):
+    log.info("%d %s got %d kbytes - %0.2f mbits %s pps %s dups %0.3f delay %0.2f loss" % (idx, ip, kbytes, mbits, pps, dups, delay, loss))
+    s = Stat(time=time, ip=ip, kbytes=kbytes, mbits=mbits, pps=pps, idx=idx, dups=dups, delay=delay, loss=loss)
     return s
 
 def get_stats():
@@ -101,6 +103,7 @@ def update_stats(test):
     test.mbits = avg(s.mbits for s in stats if s.mbits)
     test.dups = sum(s.dups for s in stats if s.dups)
     test.pps = avg(s.pps for s in stats if s.pps)
+    test.loss = avg(s.loss for s in stats if s.loss)
     delays = [s.delay for s in stats if s.delay]
     if delays:
         test.delay = max(delays) - min(delays)
@@ -117,8 +120,9 @@ def insert_items(ip, items):
         pps = item.get('pps', None)
         dups = item.get('dups', None)
         delay = item.get('delay', None)
+        loss = item.get('loss', None)
         idx = item['idx']
-        stat = log_stats(ip, time, kbytes, mbits, delay, dups, pps, idx)
+        stat = log_stats(ip, time, kbytes, mbits, loss, delay, dups, pps, idx)
 
         stat.test=test
         session.add(stat)

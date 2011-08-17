@@ -43,9 +43,10 @@ def recv(seconds=4):
     net_time = info[0] + info[1] / 1000000.0
 
     start = c = s = net_time
-    dups = packets = total = 0
+    loss = dups = packets = total = 0
     idx = 1
-    last = (0,0,0)
+    last = info
+    last_seq = info[2]
     while net_time - start < seconds:
         data, address = sock.recvfrom(1024*64)
         info = parse(data)
@@ -55,17 +56,26 @@ def recv(seconds=4):
             packets += 1
             total += len(data)
             last = info
+            #calculate loss
+            seq = info[2]
+            diff = seq - (last_seq + 1 )  
+            if diff < -200:
+                diff += 256
+            loss += diff
+            last_seq = seq
+
         net_time = info[0] + info[1] / 1000000.0
         if net_time - s >= STATS_INTERVAL:
             kbytes = total/1024
             mbit = kbytes*8/1024.0/(net_time - s)
             packets_sec = packets / (net_time - s)
+            loss_pct = 100.0 * loss/(loss+packets)
 
             c = time.time()
             delay = c - net_time
-            yield dict(time=c, kbytes=kbytes, mbits=mbit, pps=packets_sec, dups=dups, delay=delay, interval=STATS_INTERVAL, idx=idx)
+            yield dict(time=c, kbytes=kbytes, mbits=mbit, pps=packets_sec, dups=dups, delay=delay, loss=loss_pct, interval=STATS_INTERVAL, idx=idx)
 
-            dups = total = packets = 0
+            loss = dups = total = packets = 0
             s=net_time
             idx += 1
 
@@ -94,7 +104,7 @@ def run_test(seconds):
     try :
         for stat in recv(seconds):
             items.append(stat)
-            print "%(idx)3d %(time)s %(kbytes)d Kbytes %(interval)0.2f seconds %(mbits)0.2f megabit %(pps)0.2f pps %(dups)d dups %(delay)0.3f delay" % (stat)
+            print "%(idx)3d %(time)s %(kbytes)d Kbytes %(interval)0.2f seconds %(mbits)0.2f megabit %(pps)0.2f pps %(dups)d dups %(delay)0.3f delay %(loss).1f loss" % (stat)
     finally:
         send_stats(items)
 
