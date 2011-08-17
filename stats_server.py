@@ -95,7 +95,7 @@ def update_stats(test):
     test.kbytes = sum(s.kbytes for s in stats if s.kbytes)
     test.mbits = avg(s.mbits for s in stats if s.mbits)
     test.dups = sum(s.dups for s in stats if s.dups)
-    test.pps = sum(s.pps for s in stats if s.pps)
+    test.pps = avg(s.pps for s in stats if s.pps)
     delays = [s.delay for s in stats if s.delay]
     if delays:
         test.delay = max(delays) - min(delays)
@@ -163,6 +163,7 @@ def ip_info(ip):
 def test_info(id):
     session = Session()
     test = session.query(Test).get(id)
+    stats = test.stats
     return dict(test=test, title=test.ip)
 
 @app.route('/static/jquery.tablesorter.min.js')
