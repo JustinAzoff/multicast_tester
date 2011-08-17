@@ -86,6 +86,9 @@ def get_stats():
     session = Session()
     return session.query(Test).order_by(Test.time.desc())
 
+def get_machines():
+    return engine.execute("select count(distinct(ip)) from test_runs").scalar()
+
 def get_stats_for_ip(ip):
     session = Session()
     return session.query(Test).filter_by(ip=ip).order_by(Test.time.desc())
@@ -151,7 +154,7 @@ def send_stats():
 @app.route("/")
 @view("index.mako")
 def index():
-    return dict(stats=get_stats())
+    return dict(stats=get_stats(), machines=get_machines())
 
 @app.route("/ip/:ip")
 @view("ip.mako")

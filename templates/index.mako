@@ -1,7 +1,9 @@
 <%inherit file="base.mako"/>
+<p>
+Stats for ${machines} machines.
 <table class="data" border=1>
 <thead>
-<tr> <th> IP </th> <th> Time </th> <th> kbytes </th> <th> mbits </th> <th> pps </th> <th> dups </th> <th> Delay </th></tr> 
+<tr> <th> IP </th> <th> Time </th> <th> kbytes </th> <th> mbits </th> <th> pps </th> <th> dups </th> <th> Delay </th> <th>Adjusted rate</th></tr> 
 </thead>
 <tbody>
 %for x in stats:
@@ -13,6 +15,7 @@
     <td>${x.pps}</td>
     <td>${x.dups}</td>
     <td>${x.delay and ('%.3f' % x.delay)}</td>
+    <td>${(x.mbits > 90 and x.delay) and (x.mbits*60/(60+x.delay)) or ''}</td>
 </tr>
 %endfor
 </tbody>
