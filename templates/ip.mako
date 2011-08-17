@@ -8,8 +8,8 @@
 <tr>
     <td><a href="/test/${t.id}">${t.time}</a></td>
     <td>${t.kbytes}</td>
-    <td>${t.mbits}</td>
-    <td>${t.pps}</td>
+    <td>${'%.2f' % t.mbits}</td>
+    <td>${t.pps and ('%d' % t.pps)}</td>
     <td>${t.dups}</td>
     <td>${t.delay and ('%.3f' % t.delay)}</td>
 </tr>

@@ -9,8 +9,8 @@
     <td>${x.idx}</td>
     <td>${x.time}</td>
     <td>${x.kbytes}</td>
-    <td>${x.mbits}</td>
-    <td>${x.pps}</td>
+    <td>${'%.2f' % x.mbits}</td>
+    <td>${x.pps and ('%d' % x.pps)}</td>
     <td>${x.dups}</td>
     <td>${x.delay and ('%.3f' % x.delay)}</td>
 </tr>
