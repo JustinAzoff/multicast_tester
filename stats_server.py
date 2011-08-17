@@ -22,14 +22,27 @@ log = logging.getLogger("stats-server")
 from sqlalchemy import create_engine
 from sqlalchemy import Table, Column, DateTime, Float, Integer, String, MetaData, ForeignKey
 from sqlalchemy.sql import func
+from sqlalchemy.orm import mapper, relationship, sessionmaker
 import datetime
 
-engine = create_engine('sqlite:///stats.db', echo=False)
+engine = create_engine('sqlite:///stats.db', echo=True)
+Session = sessionmaker(bind=engine)
 
 metadata = MetaData()
 stats = Table('stats', metadata,
     Column('id', Integer, primary_key=True),
+    Column('test_id', None, ForeignKey('test_runs.id')),
     Column('idx', Integer),
+    Column('time', DateTime),
+    Column('ip', String(25)),
+    Column('kbytes', Integer),
+    Column('mbits', Float),
+    Column('pps', Float),
+    Column('dups', Integer),
+    Column('delay', Float),
+)
+test_runs = Table('test_runs', metadata,
+    Column('id', Integer, primary_key=True),
     Column('time', DateTime),
     Column('ip', String(25)),
     Column('kbytes', Integer),
@@ -42,14 +55,31 @@ try:
     metadata.create_all(engine) 
 except:
     pass
+
+class Base(object):
+    def __init__(self, **kwargs):
+        for k,v in kwargs.items():
+            setattr(self, k, v)
+
+class Stat(Base):
+    pass
+
+class Test(Base):
+    pass
+
+mapper(Stat, stats)
+
+mapper(Test, test_runs, properties={
+    'stats':relationship(Stat, order_by=stats.c.idx, backref="test")
+})
+def avg(items):
+    return sum(items) / len(items)
 #########
 
 def log_stats(ip, time, kbytes, mbits, delay=None, dups=None, pps=None, idx=None):
     log.info("%d %s got %d kbytes - %0.2f mbits %s pps %s dups %0.3f delay" % (idx, ip, kbytes, mbits, pps, dups, delay))
-    conn = engine.connect()
-    conn.execute(
-        stats.insert().values(time=time, ip=ip, kbytes=kbytes, mbits=mbits, pps=pps, idx=idx, dups=dups, delay=delay)
-    )
+    s = Stat(time=time, ip=ip, kbytes=kbytes, mbits=mbits, pps=pps, idx=idx, dups=dups, delay=delay)
+    return s
 
 def get_stats():
     conn = engine.connect()
@@ -58,6 +88,37 @@ def get_stats():
 def get_stats_for_ip(ip):
     conn = engine.connect()
     return conn.execute(stats.select(stats.c.ip==ip).order_by(stats.c.time.desc()))
+
+def update_stats(test):
+    test.kbytes = avg(s.kbytes for s in test if s.kbytes)
+    test.mbits = avg(s.mbits for s in test if s.mbits)
+    test.dups = sum(s.dups for s in test if s.dups)
+    test.pps = sum(s.pps for s in test if s.pps)
+    delays = [s.delay for s in test if s.delay]
+    if delays:
+        test.delay = max(s.delays) - min(delays)
+
+def insert_items(ip, items):
+    session = Session()
+    if items:
+        test = Test(ip=ip,time=datetime.datetime.now())
+        session.add(test)
+    for item in items:
+        time = datetime.datetime.fromtimestamp(item['time'])
+        kbytes = item['kbytes']
+        mbits = item['mbits']
+        pps = item.get('pps', None)
+        dups = item.get('dups', None)
+        delay = item.get('delay', None)
+        idx = item['idx']
+        stat = log_stats(ip, time, kbytes, mbits, delay, dups, pps, idx)
+
+        stat.test=test
+        session.add(stat)
+
+    update_stats(test)
+
+    session.commit()
 
 import manage_iperf
 @app.route("/hello")
@@ -82,15 +143,7 @@ def send_stats():
     ip = request.environ['REMOTE_ADDR']
     data = request.body.read()
     items = json.loads(data)
-    for item in items:
-        time = datetime.datetime.fromtimestamp(item['time'])
-        kbytes = item['kbytes']
-        mbits = item['mbits']
-        pps = item.get('pps', None)
-        dups = item.get('dups', None)
-        delay = item.get('delay', None)
-        idx = item['idx']
-        log_stats(ip, time, kbytes, mbits, delay, dups, pps, idx)
+    insert_items(ip, items)
     return "ok"
 
 @app.route("/")
