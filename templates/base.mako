@@ -15,6 +15,9 @@ table.data th {
     text-transform: capitalize;
     cursor: pointer;
 }
+table.data thead tr .headerSortDown, table.data thead tr .headerSortUp {
+background-color: #8dbdd8;
+}
 </style>
 <title>
 Multicast Stats
