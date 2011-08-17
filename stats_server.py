@@ -156,7 +156,11 @@ def send_stats():
     ip = request.environ['REMOTE_ADDR']
     data = request.body.read()
     items = json.loads(data)
-    insert_items(ip, items)
+    try :
+        insert_items(ip, items)
+    except Exception, e:
+        print e
+        raise
     return "ok"
 
 @app.route("/")
