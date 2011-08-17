@@ -36,6 +36,7 @@ stats = Table('stats', metadata,
     Column('mbits', Float),
     Column('pps', Float),
     Column('dups', Integer),
+    Column('delay', Float),
 )
 try:
     metadata.create_all(engine) 
@@ -43,16 +44,16 @@ except:
     pass
 #########
 
-def log_stats(ip, time, kbytes, mbits, dups=None, pps=None, idx=None):
-    log.info("%d %s got %d kbytes - %0.2f mbits %s pps %s dups" % (idx, ip, kbytes, mbits, pps, dups))
+def log_stats(ip, time, kbytes, mbits, delay=None, dups=None, pps=None, idx=None):
+    log.info("%d %s got %d kbytes - %0.2f mbits %s pps %s dups %0.3f delay" % (idx, ip, kbytes, mbits, pps, dups, delay))
     conn = engine.connect()
     conn.execute(
-        stats.insert().values(time=time, ip=ip, kbytes=kbytes, mbits=mbits, pps=pps, idx=idx, dups=dups)
+        stats.insert().values(time=time, ip=ip, kbytes=kbytes, mbits=mbits, pps=pps, idx=idx, dups=dups, delay=delay)
     )
 
 def get_stats():
     conn = engine.connect()
-    return conn.execute("SELECT ip, max(time) as last, count(1) as samples, min(mbits) as min, max(mbits) as max, avg(mbits) as avg, avg(pps) as pps, sum(dups) as dups from stats group by ip order by max DESC")
+    return conn.execute("SELECT ip, max(time) as last, count(1) as samples, min(mbits) as min, max(mbits) as max, avg(mbits) as avg, avg(pps) as pps, sum(dups) as dups, avg(delay) as delay from stats group by ip order by max DESC")
 
 def get_stats_for_ip(ip):
     conn = engine.connect()
@@ -87,8 +88,9 @@ def send_stats():
         mbits = item['mbits']
         pps = item.get('pps', None)
         dups = item.get('dups', None)
+        delay = item.get('delay', None)
         idx = item['idx']
-        log_stats(ip, time, kbytes, mbits, dups, pps, idx)
+        log_stats(ip, time, kbytes, mbits, delay, dups, pps, idx)
     return "ok"
 
 @app.route("/")

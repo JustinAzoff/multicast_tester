@@ -59,7 +59,9 @@ def recv(seconds=4):
             mbit = kbytes*8/1024.0/STATS_INTERVAL
             packets_sec = packets / STATS_INTERVAL
 
-            yield dict(time=c, kbytes=kbytes, mbits=mbit, pps=packets_sec, dups=dups, interval=STATS_INTERVAL, idx=idx)
+            a_time = info[0] + info[1] / 1000000.0
+            delay = c - a_time
+            yield dict(time=c, kbytes=kbytes, mbits=mbit, pps=packets_sec, dups=dups, delay=delay, interval=STATS_INTERVAL, idx=idx)
 
             dups = total = packets = 0
             s=c
@@ -90,7 +92,7 @@ def run_test(seconds):
     try :
         for stat in recv(seconds):
             items.append(stat)
-            print "%(idx)3d %(time)s %(kbytes)d Kbytes %(interval)0.2f seconds %(mbits)0.2f megabit %(pps)0.2f pps %(dups)d dups" % (stat)
+            print "%(idx)3d %(time)s %(kbytes)d Kbytes %(interval)0.2f seconds %(mbits)0.2f megabit %(pps)0.2f pps %(dups)d dups %(delay)0.3f delay" % (stat)
     finally:
         send_stats(items)
 

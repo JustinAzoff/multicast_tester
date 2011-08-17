@@ -1,7 +1,7 @@
 <%inherit file="base.mako"/>
 <table class="data" border=1>
 <thead>
-<tr> <th> idx </th> <th> Time </th> <th> Kbytes </th> <th>mbits</th> <th> pps </th> <th>Dups</th></tr>
+<tr> <th> idx </th> <th> Time </th> <th> Kbytes </th> <th>mbits</th> <th> pps </th> <th>Dups</th> <th>Delay</th></tr>
 </thead>
 <tbody>
 %for x in stats:
@@ -12,6 +12,7 @@
     <td>${x.mbits}</td>
     <td>${x.pps}</td>
     <td>${x.dups}</td>
+    <td>${x.delay}</td>
 </tr>
 %endfor
 </tbody>
