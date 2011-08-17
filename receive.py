@@ -18,12 +18,8 @@ HELLO_URL = "http://mcastserver:7001/hello"
 STATS_URL = "http://mcastserver:7001/send_stats"
 
 def parse(packet):
-    id = packet[0:4]
-    ts = packet[4:8]
-    us = packet[8:12]
-    ts = struct.unpack(">L", ts)[0]
-    us = struct.unpack(">L", us)[0]
-    id = struct.unpack(">l", id)[0]
+    data = packet[0:12]
+    id, ts,us = struct.unpack(">lLL", data)
     net_time = ts + us/1000000.0
     return net_time, id
     
