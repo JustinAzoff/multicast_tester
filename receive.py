@@ -18,11 +18,12 @@ HELLO_URL = "http://mcastserver:7001/hello"
 STATS_URL = "http://mcastserver:7001/send_stats"
 
 def parse(packet):
-    id = ord(packet[3])
+    id = packet[0:4]
     ts = packet[4:8]
     us = packet[8:12]
     ts = struct.unpack(">L", ts)[0]
     us = struct.unpack(">L", us)[0]
+    id = struct.unpack(">l", id)[0]
     net_time = ts + us/1000000.0
     return net_time, id
     
@@ -58,9 +59,9 @@ def recv(seconds=4):
             #calculate loss
             seq = info[1]
             diff = seq - (last_seq + 1 )  
-            if diff < -200:
-                diff += 256
-            loss += diff
+            #wrap around should be impossible now.. iperf would need to be running for 5 days
+            if diff > 0:
+                loss += diff
             last_seq = seq
 
         net_time = info[0]
@@ -104,6 +105,8 @@ def run_test(seconds):
         for stat in recv(seconds):
             items.append(stat)
             print "%(idx)3d %(time)s %(kbytes)d Kbytes %(interval)0.2f seconds %(mbits)0.2f megabit %(pps)0.2f pps %(dups)d dups %(delay)0.3f delay %(loss).1f loss" % (stat)
+    except Exception, e:
+        print e
     finally:
         send_stats(items)
 
