@@ -13,6 +13,7 @@ table.data th, table.data td {
 table.data th {
     background: lightgray;
     text-transform: capitalize;
+    cursor: pointer;
 }
 </style>
 <title>
@@ -21,6 +22,13 @@ Multicast Stats
 - ${title}
 %endif
 </title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+<script src="/static/jquery.tablesorter.min.js"></script>
+<script>
+$(document).ready(function(){ 
+    $("table.data").tablesorter(); 
+}); 
+</script>
 </head>
 <body>
 

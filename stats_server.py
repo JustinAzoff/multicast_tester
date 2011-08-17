@@ -5,7 +5,7 @@ except:
     import simplejson as json
 
 import os
-from bottle import Bottle, run, request, response, redirect, request, abort, json_dumps
+from bottle import Bottle, run, request, response, redirect, request, abort, json_dumps, static_file
 from bottle import mako_view as view
 import bottle
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
@@ -102,6 +102,11 @@ def index():
 @view("ip.mako")
 def ip_info(ip):
     return dict(stats=get_stats_for_ip(ip), title=ip)
+
+@app.route('/static/jquery.tablesorter.min.js')
+def tablesort():
+    return static_file('jquery.tablesorter.min.js', root='./')
+
 
 def main():
     run(app, host='0.0.0.0',server='auto', port=7001)
