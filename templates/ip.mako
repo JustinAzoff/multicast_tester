@@ -12,7 +12,7 @@
     <td>${x.mbits}</td>
     <td>${x.pps}</td>
     <td>${x.dups}</td>
-    <td>${x.delay}</td>
+    <td>${x.delay and ('%.3f' % x.delay)}</td>
 </tr>
 %endfor
 </tbody>
