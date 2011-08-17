@@ -39,8 +39,10 @@ def recv(seconds=4):
     print "waiting for first packet..."
     data, address = sock.recvfrom(1024*64)
     print "got it. Testing for %d seconds" % seconds
+    info = parse(data)
+    net_time = info[0] + info[1] / 1000000.0
 
-    start = c = s = time.time()
+    start = c = s = net_time
     dups = packets = total = 0
     idx = 1
     last = (0,0,0)
@@ -53,18 +55,19 @@ def recv(seconds=4):
             packets += 1
             total += len(data)
             last = info
-        c = time.time()
-        if c- s >= STATS_INTERVAL:
+        net_time = info[0] + info[1] / 1000000.0
+        if net_time - s >= STATS_INTERVAL:
             kbytes = total/1024
-            mbit = kbytes*8/1024.0/STATS_INTERVAL
-            packets_sec = packets / STATS_INTERVAL
+            mbit = kbytes*8/1024.0/(net_time - s)
+            packets_sec = packets / (net_time - s)
 
             a_time = info[0] + info[1] / 1000000.0
-            delay = c - a_time
+            c = time.time()
+            delay = c - net_time
             yield dict(time=c, kbytes=kbytes, mbits=mbit, pps=packets_sec, dups=dups, delay=delay, interval=STATS_INTERVAL, idx=idx)
 
             dups = total = packets = 0
-            s=c
+            s=net_time
             idx += 1
 
 def send_hello():
