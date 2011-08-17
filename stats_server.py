@@ -11,6 +11,8 @@ import bottle
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
 bottle.TEMPLATE_PATH.insert(0, template_dir)
 
+import paste.translogger
+
 #bottle.debug(True)
 app = Bottle()
 
@@ -169,10 +171,17 @@ def test_info(id):
     stats = test.stats
     return dict(test=test, title=test.ip)
 
+import time
+@app.route("/time")
+def the_time():
+    return repr(time.time())
+
 @app.route('/static/jquery.tablesorter.min.js')
 def tablesort():
     return static_file('jquery.tablesorter.min.js', root='./')
 
+app = paste.translogger.TransLogger(app)
+logging.getLogger("wsgi").addHandler(logging.FileHandler("server.log"))
 
 def main():
     run(app, host='0.0.0.0',server='auto', port=7001)
