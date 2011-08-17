@@ -25,7 +25,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import mapper, relationship, sessionmaker
 import datetime
 
-engine = create_engine('sqlite:///stats.db', echo=True)
+engine = create_engine('sqlite:///stats.db', echo=False)
 Session = sessionmaker(bind=engine)
 
 metadata = MetaData()
@@ -73,6 +73,7 @@ mapper(Test, test_runs, properties={
     'stats':relationship(Stat, order_by=stats.c.idx, backref="test")
 })
 def avg(items):
+    items = list(items)
     return sum(items) / len(items)
 #########
 
@@ -82,21 +83,22 @@ def log_stats(ip, time, kbytes, mbits, delay=None, dups=None, pps=None, idx=None
     return s
 
 def get_stats():
-    conn = engine.connect()
-    return conn.execute("SELECT ip, max(time) as last, count(1) as samples, round(min(mbits),3) as min, round(max(mbits),3) as max, round(avg(mbits),3) as avg, round(avg(pps)) as pps, sum(dups) as dups, max(delay)-min(delay) as delay from stats group by ip order by max DESC")
+    session = Session()
+    return session.query(Test).order_by(Test.time.desc())
 
 def get_stats_for_ip(ip):
-    conn = engine.connect()
-    return conn.execute(stats.select(stats.c.ip==ip).order_by(stats.c.time.desc()))
+    session = Session()
+    return session.query(Test).filter_by(ip=ip).order_by(Test.time.desc())
 
 def update_stats(test):
-    test.kbytes = avg(s.kbytes for s in test if s.kbytes)
-    test.mbits = avg(s.mbits for s in test if s.mbits)
-    test.dups = sum(s.dups for s in test if s.dups)
-    test.pps = sum(s.pps for s in test if s.pps)
-    delays = [s.delay for s in test if s.delay]
+    stats = test.stats
+    test.kbytes = sum(s.kbytes for s in stats if s.kbytes)
+    test.mbits = avg(s.mbits for s in stats if s.mbits)
+    test.dups = sum(s.dups for s in stats if s.dups)
+    test.pps = sum(s.pps for s in stats if s.pps)
+    delays = [s.delay for s in stats if s.delay]
     if delays:
-        test.delay = max(s.delays) - min(delays)
+        test.delay = max(delays) - min(delays)
 
 def insert_items(ip, items):
     session = Session()
@@ -154,7 +156,14 @@ def index():
 @app.route("/ip/:ip")
 @view("ip.mako")
 def ip_info(ip):
-    return dict(stats=get_stats_for_ip(ip), title=ip)
+    return dict(tests=get_stats_for_ip(ip), title=ip)
+
+@app.route("/test/:id")
+@view("test.mako")
+def test_info(id):
+    session = Session()
+    test = session.query(Test).get(id)
+    return dict(test=test, title=test.ip)
 
 @app.route('/static/jquery.tablesorter.min.js')
 def tablesort():
