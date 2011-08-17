@@ -78,6 +78,8 @@ mapper(Test, test_runs, properties={
 })
 def avg(items):
     items = list(items)
+    if not items:
+        return None
     return sum(items) / len(items)
 #########
 
@@ -103,8 +105,8 @@ def update_stats(test):
     test.mbits = avg(s.mbits for s in stats if s.mbits)
     test.dups = sum(s.dups for s in stats if s.dups)
     test.pps = avg(s.pps for s in stats if s.pps)
-    test.loss = avg(s.loss for s in stats if s.loss)
-    delays = [s.delay for s in stats if s.delay]
+    test.loss = avg(s.loss for s in stats if s.loss is not None)
+    delays = [s.delay for s in stats if s.delay is not None]
     if delays:
         test.delay = max(delays) - min(delays)
 
