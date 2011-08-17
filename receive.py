@@ -9,8 +9,6 @@ import urllib2
 
 import struct
 
-
-message = 'very important data'
 multicast_group = '239.255.52.100'
 PORT=7000
 server_address = ('', PORT)
@@ -25,7 +23,8 @@ def parse(packet):
     us = packet[8:12]
     ts = struct.unpack(">L", ts)[0]
     us = struct.unpack(">L", us)[0]
-    return ts, us, id
+    net_time = ts + us/1000000.0
+    return net_time, id
     
 
 def recv(seconds=4):
@@ -40,13 +39,13 @@ def recv(seconds=4):
     data, address = sock.recvfrom(1024*64)
     print "got it. Testing for %d seconds" % seconds
     info = parse(data)
-    net_time = info[0] + info[1] / 1000000.0
+    net_time = info[0]
 
     start = c = s = net_time
     loss = dups = packets = total = 0
     idx = 1
     last = info
-    last_seq = info[2]
+    last_seq = info[1]
     while net_time - start < seconds:
         data, address = sock.recvfrom(1024*64)
         info = parse(data)
@@ -57,14 +56,14 @@ def recv(seconds=4):
             total += len(data)
             last = info
             #calculate loss
-            seq = info[2]
+            seq = info[1]
             diff = seq - (last_seq + 1 )  
             if diff < -200:
                 diff += 256
             loss += diff
             last_seq = seq
 
-        net_time = info[0] + info[1] / 1000000.0
+        net_time = info[0]
         if net_time - s >= STATS_INTERVAL:
             kbytes = total/1024
             mbit = kbytes*8/1024.0/(net_time - s)
