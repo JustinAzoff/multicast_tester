@@ -46,7 +46,7 @@ def recv(seconds=4):
     dups = packets = total = 0
     idx = 1
     last = (0,0,0)
-    while c - start < seconds:
+    while net_time - start < seconds:
         data, address = sock.recvfrom(1024*64)
         info = parse(data)
         if not info > last:
@@ -61,7 +61,6 @@ def recv(seconds=4):
             mbit = kbytes*8/1024.0/(net_time - s)
             packets_sec = packets / (net_time - s)
 
-            a_time = info[0] + info[1] / 1000000.0
             c = time.time()
             delay = c - net_time
             yield dict(time=c, kbytes=kbytes, mbits=mbit, pps=packets_sec, dups=dups, delay=delay, interval=STATS_INTERVAL, idx=idx)
