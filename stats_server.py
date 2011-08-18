@@ -84,7 +84,7 @@ def avg(items):
 #########
 
 def log_stats(ip, time, kbytes, mbits, loss=None, delay=None, dups=None, pps=None, idx=None):
-    log.info("%d %s got %d kbytes - %0.2f mbits %s pps %s dups %0.3f delay %0.2f loss" % (idx, ip, kbytes, mbits, pps, dups, delay, loss))
+    log.info("%d %s got %d kbytes - %0.2f mbits %s pps %s dups %0.3f delay %0.2f loss" % (idx, ip, kbytes, mbits, pps, dups, delay, loss or 0))
     s = Stat(time=time, ip=ip, kbytes=kbytes, mbits=mbits, pps=pps, idx=idx, dups=dups, delay=delay, loss=loss)
     return s
 
