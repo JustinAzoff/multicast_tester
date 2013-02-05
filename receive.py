@@ -14,8 +14,8 @@ PORT=7000
 server_address = ('', PORT)
 
 STATS_INTERVAL = 1
-HELLO_URL = "http://mcastserver:7001/hello"
-STATS_URL = "http://mcastserver:7001/send_stats"
+HELLO_URL = "http://%s:7001/hello"
+STATS_URL = "http://%s:7001/send_stats"
 
 def parse(packet):
     data = packet[0:12]
@@ -75,27 +75,27 @@ def recv(seconds=4):
             s=net_time
             idx += 1
 
-def send_hello():
+def send_hello(server):
     for x in range(5):
         try :
-            return urllib2.urlopen(HELLO_URL, timeout=10).read()
+            return urllib2.urlopen(HELLO_URL % server, timeout=10).read()
         except Exception, e:
             time.sleep(1)
 
-def send_stats(items):
+def send_stats(server, items):
     print "Uploading results to server..."
     data = json.dumps(items)
     for x in range(5):
         try :
-            urllib2.urlopen(STATS_URL, data, timeout=10).read()
+            urllib2.urlopen(STATS_URL % server, data, timeout=10).read()
             print "Sent!"
             return True
         except Exception, e:
             print e
             time.sleep(2)
 
-def run_test(seconds):
-    print "Server says:", send_hello()
+def run_test(server, seconds):
+    print "Server says:", send_hello(server)
     items = []
     try :
         for stat in recv(seconds):
@@ -104,13 +104,14 @@ def run_test(seconds):
     except Exception, e:
         print e
     finally:
-        send_stats(items)
+        send_stats(server, items)
 
 if __name__ == "__main__":
     import sys
     seconds = 60
     try :
-        seconds = int(sys.argv[1])
+        server  = sys.argv[1]
+        seconds = int(sys.argv[2])
     except:
         pass
-    run_test(seconds)
+    run_test(server, seconds)
