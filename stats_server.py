@@ -159,7 +159,7 @@ def send_stats():
     try :
         insert_items(ip, items)
     except Exception, e:
-        print e
+        log.exception("Error inserting items")
         raise
     return "ok"
 
